@@ -4,7 +4,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
-from models import db, Deli, Hamburger
+from models import db, Deli #, Hamburger
 
 # this is our flask application!
 app = Flask(__name__)
@@ -21,6 +21,12 @@ db.init_app(app)
 @app.get('/')
 def index():
     return "Hello World"
+
+# @app.post('/delis')
+# def create_deli():
+#     newdeli = Deli(xxxx)
+#     db.session.add(newdeli)
+#     db.session.commit()
 
 # @app.get('/hamburgers')
 # def all_hamburgers():
