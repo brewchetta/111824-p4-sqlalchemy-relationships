@@ -1,10 +1,10 @@
-#!/usr/bin/env python3
-
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
-from models import db, Deli #, Hamburger
+# we will need to import our models and db here for everything to work
+# (luckily we already have Deli)
+from models import db, Deli
 
 # this is our flask application!
 app = Flask(__name__)
@@ -20,17 +20,7 @@ db.init_app(app)
 
 @app.get('/')
 def index():
-    return "Hello World"
-
-# @app.post('/delis')
-# def create_deli():
-#     newdeli = Deli(xxxx)
-#     db.session.add(newdeli)
-#     db.session.commit()
-
-# @app.get('/hamburgers')
-# def all_hamburgers():
-#     return jsonify( Hamburger.query.all() )
+    return "More goes here when we're in phase 4..."
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
