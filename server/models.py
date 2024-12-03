@@ -12,4 +12,12 @@ db = SQLAlchemy(metadata=metadata)
 
 # this will eventually become our Deli model
 class Deli(db.Model):
-    pass
+    
+    __tablename__ = "delis_table"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String)
+    location = db.Column(db.String)
+    has_ice_cream = db.Column(db.Boolean)
+    bacon_egg_cheese = db.Column(db.Boolean)
+    bodega_cat = db.Column(db.Boolean)

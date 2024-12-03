@@ -22,5 +22,10 @@ db.init_app(app)
 def index():
     return "More goes here when we're in phase 4..."
 
+# @app.post('/delis')
+# def create_deli():
+    # do stuff here with sqlalchmey to make a deli
+    # return the new deli
+
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
