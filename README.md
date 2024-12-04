@@ -1,4 +1,4 @@
-# Intro to Flask SQLAlchemy
+# Flask SQLAlchemy Relationships
 
 ## Learning Goals
 
@@ -15,6 +15,7 @@ Fork and clone the repository. Inside the repo run
 ```bash
 pipenv install
 pipenv shell
+cd server
 ```
 
 You can find your `models.py` file inside the `server` directory.
