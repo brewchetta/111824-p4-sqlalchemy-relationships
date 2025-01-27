@@ -47,68 +47,103 @@ You may now interact with your models by entering the flask shell:
 flask shell
 ```
 
-## Create
+## One to Many Relationship
 
-In our case we've created two models, `Deli` and `Hamburger`. If we want to create a new instance of a `Deli` we can do that in the shell by typing:
+We can start by creating a one to many relationship between two models. First we need to decide which is the one and which is the many. The many always gets the foreign key.
 
-```python
-new_deli = Deli(name="Bob's Deli", location="Staten Island")
-```
-
-The new `Deli` instance hasn't been added or committed as a database row yet so we'll next need to run:
+You can add a foreign key column with:
 
 ```python
-db.session.add(new_deli)
-db.session.commit()
+raccoon_id = db.Column(db.Integer, db.ForeignKey('raccoons_table.id'))
 ```
 
-The workflow here is similar to adding and committing to github. Technically you can make multiple changes and add them all before running a single `db.session.commit()`. The `Deli` should now be in our database.
+The foreign key is the only time we need to run `flask db migrate` and `flask db upgrade`. This will allow a foreign key to exist in the table.
 
-## Read
-
-To see every `Deli` in our database we can read it with:
+Next we set up a relationship. If we have two models, `Trashcan` and `Raccoon` we'll need to next create our relationship attributes.
 
 ```python
-Deli.query.all()
+class Raccoon(db.Model):
+
+    # stuff goes here ####################
+
+    trashcans = db.relationship('Trashcan', back_populates='raccoon')
+
+class Trashcan(db.Model):
+
+    # stuff goes here ####################
+
+    raccoon = db.relationship('Raccoon', back_populates='trashcans')
 ```
 
-The `Deli.query` will run specific SQL queries on our database and can be amended in certain ways. The final method `.all()` determines how many items we get back. With `.all()` we will always get back a list of the `Deli` instances whereas `.first()` will just get back a single `Deli`.
+You'll notice the name for one attribute is the `back_populates` for the other. Additionally, the first argument for the relationship will always be the string name for the other model.
 
-We can amend our statement to find a `Deli` with a specific id or name:
+This will allow us to do two things:
 
 ```python
-Deli.query.where(Deli.id == 1).first()
-Deli.query.filter(Deli.name == "Bob's Deli").first()
+# get a raccoon named Rocky
+rocky = Raccoon.query.where(Raccoon.name == 'Rocky Raccoon').first()
+
+rocky.trashcans 
+# this will return a list of trashcans with this raccoon's id as their foreign key
 ```
-
-The `.where` and `.filter` can be used interchangeably here. This will allow us to find the first `Deli` with an id of 1 or a name of "Bob's Deli".
-
-## Update
-
-There are multiple ways to update a `Deli` but the easiest might be to simply change an attribute and commit it.
 
 ```python
-bobs_deli = Deli.query.where(Deli.name == "Bob's Deli").first()
-bobs_deli.location = "Queens"
-bobs_deli.name = "Bob's Deli for Raccoons"
-db.session.commit()
+# get a trashcan
+trashcan_one = Trashcan.query.first()
+
+trashcan_one.raccoon 
+# this will return the raccoon that has claimed the trashcan 
+# a.k.a. the raccoon related that matches the foreign key
 ```
 
-Once all changes have been made you can simply run the `db.session.commit()` function and they'll immediately get added to the database.
+## Many to Many
 
-## Delete
+A many to many relationship is truthfully two one to many relationships with an extra step. Using the example above, we might say that a business has many trashcans and therefore many raccoons through their trashcans.
 
-Delete is fairly simple. If we've decided we need to delete an item from the database we run two commands:
+```
+Business --< Trashcan >-- Raccoon
+```
+
+The trashcan would then be considered the JOIN TABLE. A business can track all the raccoons it has through the Trashcan model.
+
+To set this up we first create two one to many relationships.
 
 ```python
-db.session.delete(bobs_deli)
-db.session.commit()
+class Trashcan(db.Model):
+
+    # other attributes go here ##########
+
+    business_id = db.Column(db.Integer, db.ForeignKey('businesses_table.id'))
+    business_id = db.Column(db.Integer, db.ForeignKey('raccoons_table.id'))
+
+    business = db.relationship('Business', back_populates='trashcans')
+    raccoon = db.relationship('Raccoon', back_populates='trashcans')
+
+class Business(db.Model):
+
+    # other attributes go here ##########
+    
+    trashcans = db.relationship('Trashcan', back_populates='business')
+
+class Raccoon(db.Model):
+
+    # other attributes go here ##########
+
+    trashcans = db.relationship('Trashcan', back_populates='raccoon')
 ```
 
-Once done, "Bob's Deli" should no longer exist in the database. Most often you'll be deleting by id so a more full example would look like this:
+Once those relationships are created we can add an `association_proxy` which creates an additional attribute that accesses the next step in the relationship.
 
 ```python
-deli_to_delete = Deli.query.where(Deli.id == 1).first()
-db.session.delete(deli_to_delete)
-db.session.commit()
+from sqlalchemy.ext.associationproxy import association_proxy
+
+class Business(db.Model):
+
+    # other attributes go here ##########
+    
+    trashcans = db.relationship('Trashcan', back_populates='business')
+
+    raccoons = association_proxy('trashcans', 'raccoon')
 ```
+
+The arguments for the `association_proxy` can be thought of as steps. The first step is the attribute that goes to `trashcans` and the second step is once we're in the `Trashcan` model how do we get to the `Raccoon`? In this case the `Trashcan` model has a `raccoon` attribute so we use that as the second attribute.
